@@ -48,6 +48,7 @@ var audio_playback: AudioStreamGeneratorPlayback
 var audio_phase := 0.0
 var audio_pulse := 0.0
 var audio_frequency := 220.0
+var title_time := 0.0
 var leaderboard: Node
 var leaderboard_scores: Array = []
 var leaderboard_open := false
@@ -88,6 +89,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	title_time += delta
 	match state:
 		GameState.TITLE:
 			queue_redraw()
@@ -464,11 +466,14 @@ func _draw_hud() -> void:
 
 func _draw_title() -> void:
 	draw_rect(Rect2(190, 145, 580, 240), Color(0.02, 0.05, 0.15, 0.93), true)
-	draw_string(font, Vector2(0, 220), "AIREBOUND", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 52, PALE)
-	draw_string(font, Vector2(0, 258), "SURVIVE THE AIR", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 18, CYAN)
+	var title_bob := sin(title_time * 1.8) * 3.0
+	var title_glow := 0.72 + sin(title_time * 2.4) * 0.12
+	draw_string(font, Vector2(0, 220 + title_bob), "AIREBOUND", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 52, PALE)
+	draw_string(font, Vector2(0, 258 + title_bob), "SURVIVE THE AIR", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 18, Color(CYAN, title_glow))
 	draw_string(font, Vector2(0, 318), "ARROWS  /  STEER", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 17, Color(0.72, 0.84, 0.92, 0.9))
 	draw_string(font, Vector2(0, 350), "SPACE  /  GUST", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 17, Color(0.72, 0.84, 0.92, 0.9))
-	draw_string(font, Vector2(0, 385), "PRESS ANY KEY TO BEGIN", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 14, ORANGE)
+	var prompt_alpha := 0.65 + (sin(title_time * 3.0) + 1.0) * 0.15
+	draw_string(font, Vector2(0, 385), "PRESS ANY KEY TO BEGIN", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 14, Color(ORANGE, prompt_alpha))
 
 
 func _draw_tutorial() -> void:

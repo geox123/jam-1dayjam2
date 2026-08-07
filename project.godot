@@ -1,6 +1,12 @@
 [application]
 config/name="Airebound"
 run/main_scene="res://main.tscn"
+config/description="A one-screen arcade survival game about dangerous air currents."
+
+[application/boot_splash]
+bg_color=Color(0.025, 0.043, 0.11, 1)
+show_image=false
+minimum_display_time=0
 
 [display]
 window/size/viewport_width=960
