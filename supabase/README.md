@@ -11,3 +11,5 @@ Airebound uses Supabase for the shared arcade leaderboard.
 Only the publishable key belongs in the game. The service-role key is used only by the Edge Function and must remain a Supabase secret.
 
 The game submits a player-chosen name, score, and Run duration. The function authenticates the anonymous session, applies basic bounds, and stores only the top-ten query fields needed by the game.
+
+The production deployment is triggered from the repository's `main` branch through the Supabase GitHub integration.
