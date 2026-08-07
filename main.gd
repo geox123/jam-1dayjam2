@@ -1,6 +1,8 @@
 extends Node2D
 
 const GameRulesScript = preload("res://game_rules.gd")
+const LeaderboardConfigScript = preload("res://leaderboard_config.gd")
+const LeaderboardClientScript = preload("res://leaderboard_client.gd")
 
 enum GameState { TITLE, TUTORIAL, RUN, FAILED }
 enum HazardKind { TURBULENCE, DEBRIS, VENT }
@@ -26,6 +28,7 @@ var state := GameState.TITLE
 var balloon_position := Vector2(480.0, 282.0)
 var balloon_velocity := Vector2.ZERO
 var input_direction := Vector2.ZERO
+var ambient_current := Vector2.ZERO
 var hazards: Array[Dictionary] = []
 var elapsed := 0.0
 var score := 0.0
@@ -45,6 +48,11 @@ var audio_playback: AudioStreamGeneratorPlayback
 var audio_phase := 0.0
 var audio_pulse := 0.0
 var audio_frequency := 220.0
+var leaderboard: Node
+var leaderboard_scores: Array = []
+var leaderboard_open := false
+var leaderboard_status := ""
+var name_input: LineEdit
 
 
 func _ready() -> void:
@@ -59,6 +67,22 @@ func _ready() -> void:
 		add_child(audio_player)
 		audio_player.play()
 		audio_playback = audio_player.get_stream_playback() as AudioStreamGeneratorPlayback
+	leaderboard = LeaderboardClientScript.new()
+	leaderboard.configure(LeaderboardConfigScript.SUPABASE_URL, LeaderboardConfigScript.SUPABASE_PUBLISHABLE_KEY)
+	leaderboard.scores_received.connect(_on_scores_received)
+	leaderboard.score_submitted.connect(_on_score_submitted)
+	leaderboard.request_failed.connect(_on_leaderboard_failed)
+	add_child(leaderboard)
+	name_input = LineEdit.new()
+	name_input.placeholder_text = "YOUR NAME"
+	name_input.text = "PLAYER"
+	name_input.max_length = 12
+	name_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_input.position = Vector2(340, 350)
+	name_input.size = Vector2(280, 34)
+	name_input.visible = false
+	name_input.text_submitted.connect(_submit_current_score)
+	add_child(name_input)
 	_load_high_score()
 	queue_redraw()
 
@@ -86,11 +110,21 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is not InputEventKey or not event.pressed or event.echo:
 		return
 	if state == GameState.TITLE:
-		_begin_tutorial()
+		if event.keycode == KEY_L:
+			_toggle_leaderboard()
+		else:
+			_begin_tutorial()
 	elif state == GameState.TUTORIAL:
 		start_run()
-	elif state == GameState.FAILED and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER):
-		start_run()
+	elif state == GameState.FAILED:
+		if event.keycode == KEY_L:
+			_toggle_leaderboard()
+		elif event.keycode == KEY_ESCAPE:
+			leaderboard_open = false
+		elif (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER) and not leaderboard_open:
+			start_run()
+	elif leaderboard_open and event.keycode == KEY_ESCAPE:
+		leaderboard_open = false
 
 
 func _begin_tutorial() -> void:
@@ -111,10 +145,15 @@ func start_run() -> void:
 	near_miss_flash = 0.0
 	spawn_timer = 0.45
 	gust_was_down = false
+	leaderboard_open = false
+	if name_input:
+		name_input.visible = false
 
 
 func _update_run(delta: float) -> void:
 	input_direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	ambient_current = Vector2(sin(elapsed * 0.55), cos(elapsed * 0.41)).normalized() * 22.0
+	balloon_velocity += ambient_current * delta
 	if input_direction != Vector2.ZERO:
 		balloon_velocity = balloon_velocity.move_toward(input_direction * MAX_SPEED, ACCELERATION * delta)
 	else:
@@ -269,9 +308,40 @@ func _fail_run() -> void:
 	state = GameState.FAILED
 	failure_flash = 1.0
 	_trigger_sound(95.0, 0.3)
+	if name_input:
+		name_input.visible = true
+		name_input.grab_focus()
 	if score > high_score:
 		high_score = score
 		_save_high_score()
+
+
+func _submit_current_score(player_name: String) -> void:
+	if state != GameState.FAILED or player_name.strip_edges().is_empty():
+		return
+	name_input.visible = false
+	leaderboard_status = "SUBMITTING SCORE..."
+	leaderboard.submit_score(player_name, int(score), elapsed)
+
+
+func _toggle_leaderboard() -> void:
+	leaderboard_open = not leaderboard_open
+	if leaderboard_open:
+		leaderboard_status = "LOADING ARCADE SCORES..."
+		leaderboard.load_scores()
+
+
+func _on_scores_received(scores: Array) -> void:
+	leaderboard_scores = scores
+	leaderboard_status = ""
+
+
+func _on_score_submitted() -> void:
+	leaderboard_status = "SCORE POSTED  /  PRESS L TO VIEW"
+
+
+func _on_leaderboard_failed(message: String) -> void:
+	leaderboard_status = message.to_upper()
 
 
 func _load_high_score() -> void:
@@ -321,6 +391,8 @@ func _draw() -> void:
 		_draw_hud()
 		if state == GameState.FAILED:
 			_draw_failure()
+	if leaderboard_open:
+		_draw_leaderboard()
 
 
 func _draw_header() -> void:
@@ -343,6 +415,14 @@ func _draw_arena() -> void:
 		var x := 650.0 + i * 34.0
 		var drift := sin(Time.get_ticks_msec() * 0.0012 + i) * 12.0
 		draw_line(Vector2(x, 120 + drift), Vector2(x - 28, 180 + drift), Color(0.39, 0.90, 0.95, 0.16), 2.0)
+	var current_direction := ambient_current.normalized()
+	if current_direction == Vector2.ZERO:
+		current_direction = Vector2.RIGHT
+	var current_origin := ARENA.get_center()
+	var current_tip := current_origin + current_direction * 56.0
+	draw_line(current_origin - current_direction * 56.0, current_tip, Color(0.39, 0.90, 0.95, 0.32), 3.0)
+	draw_line(current_tip, current_tip - current_direction.rotated(0.55) * 14.0, Color(0.39, 0.90, 0.95, 0.32), 3.0)
+	draw_line(current_tip, current_tip - current_direction.rotated(-0.55) * 14.0, Color(0.39, 0.90, 0.95, 0.32), 3.0)
 
 
 func _draw_balloon() -> void:
@@ -405,4 +485,25 @@ func _draw_failure() -> void:
 	draw_string(font, Vector2(0, 226), "AIR PRESSURE LOST", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 28, RED)
 	draw_string(font, Vector2(0, 270), "SCORE  %06d" % int(score), HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 20, PALE)
 	draw_string(font, Vector2(0, 298), "BEST   %06d" % int(high_score), HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 16, Color(0.72, 0.84, 0.92, 0.9))
-	draw_string(font, Vector2(0, 334), "PRESS SPACE TO RETRY", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 14, ORANGE)
+	draw_string(font, Vector2(0, 334), "TYPE NAME + ENTER  /  L FOR ARCADE", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 14, ORANGE)
+	if not leaderboard_status.is_empty():
+		draw_string(font, Vector2(0, 370), leaderboard_status, HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 12, Color(0.55, 0.72, 0.86, 0.85))
+
+
+func _draw_leaderboard() -> void:
+	draw_rect(Rect2(170, 96, 620, 350), Color(0.015, 0.035, 0.11, 0.98), true)
+	draw_rect(Rect2(170, 96, 620, 350), CYAN, false, 2.0)
+	draw_string(font, Vector2(0, 140), "AIREBOUND ARCADE", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 28, PALE)
+	draw_string(font, Vector2(0, 166), "TOP TEN AIRWALKERS", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 13, CYAN)
+	if leaderboard_scores.is_empty():
+		draw_string(font, Vector2(0, 255), leaderboard_status if not leaderboard_status.is_empty() else "NO SCORES YET", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 16, Color(0.72, 0.84, 0.92, 0.9))
+	else:
+		for index in leaderboard_scores.size():
+			var row: Dictionary = leaderboard_scores[index]
+			var y := 210.0 + index * 21.0
+			var name := str(row.get("player_name", "PLAYER"))
+			var remote_score := int(row.get("score", 0))
+			draw_string(font, Vector2(230, y), "%02d" % (index + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, ORANGE if index == 0 else Color(0.72, 0.84, 0.92, 0.9))
+			draw_string(font, Vector2(280, y), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, PALE)
+			draw_string(font, Vector2(670, y), "%06d" % remote_score, HORIZONTAL_ALIGNMENT_RIGHT, 80, 14, PALE)
+	draw_string(font, Vector2(0, 425), "L / ESC  CLOSE", HORIZONTAL_ALIGNMENT_CENTER, VIEW_SIZE.x, 12, Color(0.55, 0.72, 0.86, 0.8))
