@@ -154,6 +154,9 @@ func start_run() -> void:
 
 func _update_run(delta: float) -> void:
 	input_direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	# The built-in UI actions provide a second path for browser keyboard layouts.
+	var ui_direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	input_direction = (input_direction + ui_direction).limit_length(1.0)
 	ambient_current = Vector2(sin(elapsed * 0.55), cos(elapsed * 0.41)).normalized() * 22.0
 	balloon_velocity += ambient_current * delta
 	if input_direction != Vector2.ZERO:
@@ -380,6 +383,7 @@ func _update_audio(delta: float) -> void:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, VIEW_SIZE), NAVY)
+	_draw_atmosphere()
 	_draw_header()
 	_draw_arena()
 	if state == GameState.TITLE:
@@ -398,13 +402,34 @@ func _draw() -> void:
 
 
 func _draw_header() -> void:
+	draw_line(Vector2(60, 56), Vector2(900, 56), Color(0.39, 0.90, 0.95, 0.22), 1.0)
+	draw_circle(Vector2(43, 34), 4.0, ORANGE)
 	draw_string(font, Vector2(60, 42), "AIREBOUND", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PALE)
 	draw_string(font, Vector2(0, 40), "AIR / ONE-DAY JAM", HORIZONTAL_ALIGNMENT_RIGHT, VIEW_SIZE.x, 13, Color(0.55, 0.72, 0.86, 0.8))
 
 
+func _draw_atmosphere() -> void:
+	# A restrained cockpit-like backdrop makes the air currents readable as data.
+	for i in range(9):
+		var x := 24.0 + i * 114.0
+		draw_line(Vector2(x, 70), Vector2(x, 490), Color(0.20, 0.42, 0.66, 0.08), 1.0)
+	for i in range(5):
+		var y := 104.0 + i * 92.0
+		draw_line(Vector2(24, y), Vector2(936, y), Color(0.20, 0.42, 0.66, 0.07), 1.0)
+	draw_arc(Vector2(480, 282), 270.0, -2.7, -0.45, 36, Color(0.39, 0.90, 0.95, 0.10), 2.0)
+	draw_arc(Vector2(480, 282), 310.0, 0.45, 2.7, 36, Color(1.0, 0.71, 0.33, 0.08), 2.0)
+
+
 func _draw_arena() -> void:
 	draw_rect(ARENA, NAVY_LIGHT, true)
+	draw_rect(ARENA.grow(6.0), Color(0.39, 0.90, 0.95, 0.06), false, 8.0)
 	draw_rect(ARENA, Color(0.30, 0.57, 0.72, 0.55), false, 2.0)
+	var bracket_color := Color(0.39, 0.90, 0.95, 0.72)
+	for corner in [ARENA.position, Vector2(ARENA.end.x, ARENA.position.y), Vector2(ARENA.position.x, ARENA.end.y), ARENA.end]:
+		var sx := -1.0 if corner.x > ARENA.get_center().x else 1.0
+		var sy := -1.0 if corner.y > ARENA.get_center().y else 1.0
+		draw_line(corner, corner + Vector2(18.0 * sx, 0), bracket_color, 2.0)
+		draw_line(corner, corner + Vector2(0, 18.0 * sy), bracket_color, 2.0)
 	for i in range(7):
 		var y := ARENA.position.y + 48.0 + i * 54.0
 		var wave := sin(Time.get_ticks_msec() * 0.0016 + i * 0.7) * 18.0
@@ -433,10 +458,13 @@ func _draw_balloon() -> void:
 	if gust_pulse > 0.0:
 		var pulse_radius := GUST_RADIUS * (1.0 - gust_pulse / 0.24)
 		draw_arc(balloon_position, pulse_radius, 0.0, TAU, 48, Color(0.39, 0.90, 0.95, gust_pulse * 2.0), 3.0)
-	draw_circle(balloon_position + Vector2(3, 4), BALLOON_RADIUS + 3.0, Color(0.01, 0.04, 0.13, 0.75))
-	draw_circle(balloon_position, BALLOON_RADIUS, PALE)
-	draw_circle(balloon_position - Vector2(5, 5), 5.0, Color(1, 1, 1, 0.75))
+	draw_circle(balloon_position + Vector2(3, 4), BALLOON_RADIUS + 5.0, Color(0.01, 0.04, 0.13, 0.75))
+	draw_circle(balloon_position, BALLOON_RADIUS + 3.0, Color(0.39, 0.90, 0.95, 0.16))
+	draw_circle(balloon_position, BALLOON_RADIUS, Color("b9f5f1"))
+	draw_circle(balloon_position - Vector2(5, 5), 5.0, Color(1, 1, 1, 0.82))
 	draw_arc(balloon_position, BALLOON_RADIUS, 0.0, TAU, 32, CYAN, 2.0)
+	draw_line(balloon_position + Vector2(-5, 15), balloon_position + Vector2(0, 23), ORANGE, 2.0)
+	draw_line(balloon_position + Vector2(5, 15), balloon_position + Vector2(0, 23), ORANGE, 2.0)
 
 
 func _draw_hazard(hazard: Dictionary) -> void:
