@@ -6,7 +6,7 @@ Airebound
 
 ## Short description
 
-Survive dangerous air currents, thread near misses, and spend your gust at exactly the right moment in this neon arcade survival game.
+Survive dangerous air currents, dodge hazards, and master your Gust in this neon arcade survival game.
 
 ## Description
 
