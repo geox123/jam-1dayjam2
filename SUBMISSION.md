@@ -25,6 +25,14 @@ Built for the 1-Day Jam #2 theme: AIR.
 
 Upload `build/Airebound-web.zip` as an HTML game. The zip contains the exported `index.html` and all required Godot Web files at its root.
 
+## Promotional image uploads
+
+- Main project cover: `assets/project-cover.png` (630x500, title visible)
+- Social media image: `assets/social-cover.png` (title visible)
+- Wide cover: `assets/wide-cover.png` (21:9, title visible)
+- Logo: `assets/logo.png` (transparent PNG)
+- Favicon: `assets/favicon.png`
+
 ## Suggested tags
 
 Arcade, Score Attack, Action, Survival, Neon, Keyboard, Minimalist, Godot
