@@ -6,7 +6,7 @@ Airebound
 
 ## Short description
 
-Survive dangerous air currents, dodge hazards, and master your Gust in this neon arcade survival game.
+Steer a balloon through dangerous air currents, dodge hazards, and use your Gust to stay alive.
 
 ## Description
 
@@ -76,15 +76,15 @@ Paste this into the itch.io project description editor:
   <p style="color:#63e5f2;text-align:center;font-size:1.15em;margin:0 0 24px;">SURVIVE THE AIR</p>
 
   <p style="font-size:1.1em;line-height:1.6;text-align:center;max-width:720px;margin:0 auto 24px;">
-    The room is moving. Steer your balloon through dangerous air currents, thread near misses,
-    and spend your Gust at exactly the right moment.
+    Air is already moving when the run starts. Guide your balloon through the room,
+    avoid the hazards, and use your Gust when you need some space.
   </p>
 
   <h2 style="color:#ffb454;">THE RUN</h2>
   <p style="line-height:1.6;">
-    Dodge turbulence, debris, and pressure vents as the room grows more dangerous.
-    Stay close to danger to build your <strong>Risk Multiplier</strong>, but one collision ends the run.
-    Survive longer, score higher, and climb the shared online arcade leaderboard.
+    Turbulence, debris, and pressure vents appear as the run goes on.
+    Staying close to danger builds your <strong>Risk Multiplier</strong>, but one collision ends the run.
+    See how long you can last, then try to beat the scores on the shared leaderboard.
   </p>
 
   <h2 style="color:#ffb454;">CONTROLS</h2>
@@ -97,11 +97,11 @@ Paste this into the itch.io project description editor:
 
   <h2 style="color:#ffb454;">FEATURES</h2>
   <ul style="line-height:1.8;">
-    <li>Fast, single-screen arcade survival</li>
-    <li>Three escalating air hazards</li>
-    <li>Near-miss scoring and risk multipliers</li>
-    <li>Shared online leaderboard</li>
-    <li>Play instantly in your browser</li>
+    <li>A short, single-screen survival game</li>
+    <li>Three hazards that get harder to avoid</li>
+    <li>Near-miss scoring and a risk multiplier</li>
+    <li>A shared online leaderboard</li>
+    <li>Playable in your browser</li>
   </ul>
 
   <p style="color:#63e5f2;text-align:center;margin-top:28px;">Made for the 1-Day Jam #2 theme: AIR.</p>
