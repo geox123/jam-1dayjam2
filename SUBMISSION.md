@@ -27,7 +27,19 @@ Upload `build/Airebound-web.zip` as an HTML game. The zip contains the exported 
 
 ## Suggested tags
 
-Arcade, Survival, Score Attack, One Button, Minimalist, Neon, Browser, Godot
+Arcade, Score Attack, Action, Survival, Neon, Keyboard, Minimalist, Godot
+
+## Recommended itch.io metadata
+
+- Genre: Survival
+- Platforms: HTML5
+- Input: Keyboard
+- Average session: A few minutes
+- Multiplayer: leave unchecked (the leaderboard is shared scoring, not multiplayer)
+- Price: Free or $0 / donate
+- Release status: Released
+- Made with: Godot
+- AI disclosure: cover art generated with AI; game code, design, and in-game visuals are original procedural work
 
 ## Submission checklist
 
